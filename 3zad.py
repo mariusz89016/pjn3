@@ -12,9 +12,12 @@ def initialize():
     return errors_statistics, words_frequency
 
 def spellcheck(word, errors_statistics, words_frequency):
+    word = beautify_word(word)
     output = []
     for c in words_frequency:
         output.append((c, errors_statistics[levenshtein_distance(word, c)] * words_frequency[c]))
+        # print (c, errors_statistics[levenshtein_distance(word, c)] * words_frequency[c])
+        # raw_input()
 
     return max(output, key=operator.itemgetter(1))
 

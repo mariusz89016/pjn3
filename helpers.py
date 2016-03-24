@@ -17,20 +17,21 @@ FILES = ['dramat.iso.utf8',
          'wp.iso.utf8']
 
 errors_map = {
-    'u': [{'letter2': u'ó', 'cost': 0.25}],
-    'z': [{'letter2': u'ż', 'before_letter1': 'r', 'not_before_letter2': 'r', 'cost': 0.25 },
+    u'u': [{'letter2': u'ó', 'cost': 0.25}],
+    u'z': [{'letter2': u'ż', 'before_letter1': u'r', 'not_before_letter2': u'r', 'cost': -0.5 },
             {'letter2': u'ź', 'cost': 0.25},
             {'letter2': u'ż', 'cost': 0.25},
-            {'letter2': u'ż', 'before_letter1': 's', 'cost': 0.25}],
-    'h': [{'letter2': u'h', 'before_letter1': 'c', 'not_before_letter2': 'c', 'cost': 0.25 }],
-    'a': [{'letter2': u'ą', 'cost': 0.25}],
-    'c': [{'letter2': u'ć', 'cost': 0.25}],
-    'e': [{'letter2': u'ę', 'cost': 0.25}],
-    'l': [{'letter2': u'ł', 'cost': 0.25}],
-    'n': [{'letter2': u'ń', 'cost': 0.25}],
-    's': [{'letter2': u'ś', 'cost': 0.25}],
-    u'ą': [{'letter2': 'm', 'before_letter2': 'o', 'cost': 0.25}],
-    u'ę': [{'letter2': 'n', 'before_letter2': 'e', 'cost': 0.25}]
+            {'letter2': u'ż', 'before_letter1': u's', 'cost': -0.5}],
+    u'h': [{'letter2': u'h', 'before_letter1': u'c', 'not_before_letter2': u'c', 'cost': -0.5 }],
+    u'a': [{'letter2': u'ą', 'cost': 0.25}],
+    u'c': [{'letter2': u'ć', 'cost': 0.25}],
+    u'e': [{'letter2': u'ę', 'cost': 0.25}],
+    u'l': [{'letter2': u'ł', 'cost': 0.25}],
+    u'n': [{'letter2': u'ń', 'cost': 0.25}],
+    u's': [{'letter2': u'ś', 'cost': 0.25}],
+    u'ą': [{'letter2': u'm', 'before_letter2': u'o', 'cost': -0.5},
+           {'letter2': u'n', 'before_letter2': u'o', 'cost': -0.5}],
+    u'ę': [{'letter2': u'n', 'before_letter2': u'e', 'cost': -0.5}]
 
 }
 
@@ -40,7 +41,7 @@ def compare(letter1, letter2, before_letter1, before_letter2):
     elif letter1==before_letter2 and letter2==before_letter1:
         # schoolboy mistake
         return 0.5
-    return min(compare_letter_improved(letter1, letter2, before_letter1, before_letter2), compare_letter_improved(letter2, letter1, before_letter1, before_letter2))
+    return min(compare_letter_improved(letter1, letter2, before_letter1, before_letter2), compare_letter_improved(letter2, letter1, before_letter2, before_letter1))
 
 def compare_letter_improved(letter1, letter2, before_letter1, before_letter2, errors_map=errors_map):
     if(letter1==letter2):
@@ -75,8 +76,8 @@ def levenshtein_distance(word1, word2, debug=False):
 
     for i in range(1, len2+1):
         for j in range(1, len1+1):
-            before_word2 = word2[i-2] if i-2>=0 else ''
-            before_word1 = word1[j-2] if j-2>=0 else ''
+            before_word2 = word2[i-2] if i-2>=0 else u''
+            before_word1 = word1[j-2] if j-2>=0 else u''
             subst = compare(word2[i-1], word1[j-1], before_word2, before_word1)
             d[i][j] = min(d[i][j-1] + 1,
                           d[i-1][j] + 1,
@@ -94,9 +95,15 @@ def process_errors_statistics():
         for line in f.readlines():
             output.append(line.split(';'))
 
+    # with codecs.open('lab3_data/bledy2.txt', 'r', 'utf8') as f:
+        # for line in f.readlines():
+            # output.append(line.split(' -'))
+
     errors = defaultdict(int)
+
     for err, nerr in output:
-        errors[levenshtein_distance(err, nerr)] += 1
+        # print beautify_word(err).encode('utf8'), beautify_word(nerr).encode('utf8'), "->", levenshtein_distance(beautify_word(err), beautify_word(nerr)), "vs", levenshtein_distance_simple(beautify_word(err), beautify_word(nerr))
+        errors[levenshtein_distance(beautify_word(err), beautify_word(nerr))] += 1
     sum = float(reduce(lambda x,y: x+y, errors.values()))
     for k in errors:
         errors[k]/=sum
@@ -111,19 +118,47 @@ def beautify_word(word):
         matchObj = p.match(word)
         if matchObj:
             word = matchObj.group(1)
-        return word.translate(None, "(),.:;[]!").lower()
+        return word.encode('utf8').translate(None, "(),.:;[]!").lower().strip().decode('utf8')
 
 def process_corpuses():
     output = defaultdict(int)
     for file in FILES:
-        with open(join(DIRECTORY, file), 'r') as f:
+        with codecs.open(join(DIRECTORY, file), 'r', 'utf8') as f:
             for line in f.readlines():
                 if line.startswith('*'):
                     continue
                 for word in line.split(' '):
-                    output[beautify_word(word)] += 1
+                    bword = beautify_word(word)
+                    # if bword==u'w' or bword==u'i' or bword==u'się' or bword==u'na' or bword==u'nie' or bword==u'z':
+                    #     continue
+                    output[bword] += 1
+
+    print len(output)
     sum_laplace = float(reduce(lambda x,y: x+y, output.values())) + len(output)
 
     for k in output:
         output[k] = (output[k] + 1) / sum_laplace
     return dict(output)
+
+def levenshtein_distance_simple(word1, word2, debug=False):
+    len1 = len(word1)
+    len2 = len(word2)
+    d = [[0 for x in range(len1+1)] for y in range(len2+1)]
+    for i in range(len1+1):
+        d[0][i] = i
+    for j in range(len2+1):
+        d[j][0] = j
+
+    if debug:
+        print_debug(word1, word2, d)
+
+    for i in range(1, len2+1):
+        for j in range(1, len1+1):
+            if word2[i-1] == word1[j-1]:
+                subst = 0
+            else:
+                subst = 1
+            d[i][j] = min(d[i][j-1] + 1,
+                          d[i-1][j] + 1,
+                          d[i-1][j-1] + subst)
+    return d[len2][len1]
