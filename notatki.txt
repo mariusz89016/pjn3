@@ -1,0 +1,24 @@
+miara poprawności klasyfikacji:
+* precision: jak duzy procent obiektow zaklasyfikowanych do A zostal poprawnie zaklasyfikowany (musi byc malo false positive)
+*  recall (pelnosc): jak duzy jest procent poprawnie zaklasyfikowanych obiektow wzgledem wszystkich obiektow w zbiorze wzorcowym
+
+F1: średnia harmoniczna miar precision i recall
+
+------------------
+Lab 3 - Spellchecker Bayesa
+
+P(A|B) = P(A and B) / P(B)
+P(B) > 0
+
+Twierdzenie Bayesa:
+B1, ..., Bn
+A - w calosci zawiera sie w zbiorze
+...
+
+wygladzanie laplace'a
+P(c) = (N_c + 1)/(N+M)
+
+Zadanie: (po swietach)
+1. funkcja obliczajaca prawdopodobienstwo bledu P(w|c)
+2. zebrać statystyki występowania form w korpusie
+3. korzystając z naiwnego klasyfikatora Bayesa zaproponować najlepszą poprawkę dla wpisanego słowa
