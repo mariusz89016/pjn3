@@ -133,12 +133,16 @@ def process_corpuses():
                     #     continue
                     output[bword] += 1
 
-    print len(output)
     sum_laplace = float(reduce(lambda x,y: x+y, output.values())) + len(output)
 
     for k in output:
         output[k] = (output[k] + 1) / sum_laplace
-    return dict(output)
+
+    with codecs.open(join(DIRECTORY, 'formy.txt'), "r", 'iso8859-2') as f:
+        for line in f.readlines():
+            output[line] = 1.0/sum_laplace
+
+    return output
 
 def levenshtein_distance_simple(word1, word2, debug=False):
     len1 = len(word1)
